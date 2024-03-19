@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Esempio di fetch js</title>
+    <script>
+        function checkObstacle() {
+            fetch('http://192.168.1.146:5000/api/v1/resources/sensors/generic?side=b')
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.getElementById('obstacleStatus');
+                    console.log(data)
+
+                    if (data.r === 0 && data.l === 0) {
+                        statusElement.textContent = 'Ostacolo presente a destra e sinistra';
+                    } 
+                    if (data.r === 1 && data.r === 1) {
+                        statusElement.textContent = 'Ostacolo assente a destra e sinistra';
+                    } 
+                    if(data.l === 0 && data.r === 1){
+                        statusElement.textContent = 'Ostacolo presente a sinistra';
+                    } 
+                    if (data.r === 0 && data.l === 1) {
+                        statusElement.textContent = 'Ostacolo presente a destra';
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+        
+        setInterval(checkObstacle, 2000);
+    </script>
+</head>
+<body>
+    <!-- Elemento in cui mostrare lo stato dell'ostacolo -->
+    <div id="obstacleStatus">Stato dell'ostacolo...</div>
+</body>
+</html>
