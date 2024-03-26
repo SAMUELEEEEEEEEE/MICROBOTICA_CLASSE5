@@ -1,7 +1,7 @@
 #Authors: Meinero Samuele, Menardi Samuele
 
 #Importazione delle librerie necessarie al funzionamento del codice
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 import AlphaBot
 import sqlite3 as sql
 import time
@@ -13,7 +13,7 @@ import hashlib
 app = Flask(__name__)
 
 #Istanza della classe alphabot
-alpha = AlphaBot.AlphaBot()
+alphabot = AlphaBot.AlphaBot()
 
 def generatore_token():
     """
@@ -83,7 +83,7 @@ def login():
 
 # Indicizza i comandi e le relative azioni associate
 COMMAND = ["RS", "SQ", "TA"]
-commandDict = {"B": alpha.backward, "F": alpha.forward, "L": alpha.left, "R": alpha.right, "S": alpha.stop}
+commandDict = {"B": alphabot.backward, "F": alphabot.forward, "L": alphabot.left, "R": alphabot.right, "S": alphabot.stop}
 
 # Funzione per interrogare il database ed eseguire una sequenza di movimenti associata a una shortcut
 def db_interrogation(sh):
@@ -104,7 +104,7 @@ def db_interrogation(sh):
     for command in res[0][0].split("-"):
         commandDict[command.split(";")[0]]()  # Esegue il comando di movimento
         time.sleep(float(command.split(";")[1]))
-        alpha.stop()
+        alphabot.stop()
         print(command)
 
 # Funzione decoratore per gestire la pagina principale
@@ -115,23 +115,23 @@ def index():
         #A seconda del comando inserito -> esegue un movimento
         if request.form.get('F') == 'Forward':
             #print(">>Forward")
-            alpha.forward()
+            alphabot.forward()
 
         elif request.form.get('B') == 'Backward':
             #print(">>Backward")
-            alpha.backward()
+            alphabot.backward()
 
         elif request.form.get('S') == 'Stop':
             #print(">>Stop")
-            alpha.stop()
+            alphabot.stop()
 
         elif request.form.get('R') == 'Right':
             #print(">>Right")
-            alpha.right()
+            alphabot.right()
 
         elif request.form.get('L') == 'Left':
             #print(">>Left")
-            alpha.left()
+            alphabot.left()
 
         #Per i comandi "speciali" interroga il db
         elif request.form.get("rs") == "RS":
@@ -150,6 +150,29 @@ def index():
         return render_template('index.html')
 
     return render_template("index.html")
+
+@app.route("/api/v1/resources/sensors/left", methods = ["GET"])
+def left():
+    return jsonify({"l" : alphabot.get_sensor_values()["l"]})
+
+@app.route("/api/v1/resources/sensors/right", methods = ["GET"])
+def right():
+    return jsonify({"r" : alphabot.get_sensor_values()["r"]})
+
+result_dict = {"l" : left, "r" : right}
+
+@app.route("/api/v1/resources/sensors/generic", methods = ["GET"])
+def generic():
+    """
+    query string = side=l / side=r / side=b
+    """
+    if "side" in request.args:
+        side = request.args["side"]
+        
+        if side == "b":
+            return jsonify(alphabot.get_sensor_values())
+
+        return result_dict[side]()
 
 # Esegue l'app Flask
 if __name__ == '__main__':

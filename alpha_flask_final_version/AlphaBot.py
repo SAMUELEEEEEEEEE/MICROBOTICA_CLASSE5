@@ -125,6 +125,14 @@ class AlphaBot(object):
             #self.alphabot.stop()
             self.sensor_all_active = True
         time.sleep(0.5)
+    
+    def get_sensor_values(self):
+        self.DR_status = GPIO.input(self.DR)	#Statue of anterior right sensor
+        self.DL_status = GPIO.input(self.DL)	#Statue of anterior left sensor
+        # if DL_* == 1: not detention
+        # if DL_* == 0: detention
+        return {"l" : self.DL_status, "r" : self.DR_status}
+
         
     def set_pwm_a(self, value): #set the rotation
         self.PA = value
